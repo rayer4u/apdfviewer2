@@ -11,7 +11,6 @@ LOCAL_SRC_FILES := 		\
 	src/base/ftbitmap.c 	\
 	src/base/ftglyph.c 	\
 	src/base/ftstroke.c 	\
-	src/base/ftxf86.c 	\
 	src/base/ftbase.c 	\
 	src/base/ftsystem.c 	\
 	src/base/ftinit.c 	\
@@ -68,6 +67,7 @@ LOCAL_SRC_FILES :=      \
 	fofi/FoFiTrueType.cc		\
 	fofi/FoFiType1.cc		\
 	fofi/FoFiType1C.cc		\
+	fofi/FoFiIdentifier.cc		\
 	goo/gfile.cc			\
 	goo/gmempp.cc			\
 	goo/GooHash.cc			\
@@ -75,8 +75,10 @@ LOCAL_SRC_FILES :=      \
 	goo/GooTimer.cc			\
 	goo/GooString.cc		\
 	goo/gmem.cc			\
+	goo/glibc.cc			\
 	goo/FixedPoint.cc		\
 	goo/gstrtod.cc			\
+	goo/grandom.cc			\
 	poppler/CachedFile.cc		\
 	poppler/GlobalParams.cc		\
 	poppler/FlateStream.cc		\
@@ -85,7 +87,11 @@ LOCAL_SRC_FILES :=      \
 	poppler/BuiltinFont.cc		\
 	poppler/BuiltinFontTables.cc	\
 	poppler/Catalog.cc 		\
+	poppler/StructElement.cc	\
+	poppler/StructTreeRoot.cc	\
+	poppler/MarkedContentOutputDev.cc \
 	poppler/CharCodeToUnicode.cc	\
+	poppler/UTF.cc			\
 	poppler/CMap.cc			\
 	poppler/DateInfo.cc		\
 	poppler/Decrypt.cc		\
@@ -93,6 +99,7 @@ LOCAL_SRC_FILES :=      \
 	poppler/FileSpec.cc		\
 	poppler/FontEncodingTables.cc	\
 	poppler/Form.cc 		\
+	poppler/SignatureInfo.cc	\
 	poppler/FontInfo.cc		\
 	poppler/Function.cc		\
 	poppler/Gfx.cc 			\
@@ -146,7 +153,6 @@ LOCAL_SRC_FILES :=      \
 	splash/SplashState.cc		\
 	splash/SplashXPath.cc		\
 	splash/SplashXPathScanner.cc	\
-	../customize/poppler/GlobalParamsAndroid.cc	\
 	../customize/poppler/customize.cc
 
 LOCAL_C_INCLUDES :=         	\

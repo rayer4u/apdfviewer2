@@ -7,6 +7,7 @@ import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.PixelFormat;
 import android.view.Menu;
 
 public class APDFViewerActivity extends Activity {
@@ -28,6 +29,10 @@ public class APDFViewerActivity extends Activity {
 		mRender.openUri(uri);
 
         mGLSurfaceView = new GLSurfaceView(this);
+        mGLSurfaceView.setPreserveEGLContextOnPause(true);
+        mGLSurfaceView.setEGLConfigChooser(8 , 8, 8, 8, 16, 0);   
+        mGLSurfaceView.getHolder().setFormat(PixelFormat.RGB_888);
+        
         mGLSurfaceView.setRenderer(mRender);
         mGLSurfaceView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
         

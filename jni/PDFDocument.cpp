@@ -16,6 +16,7 @@
 #include <assert.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <errno.h>
 
 #include <jni.h>
 
@@ -23,10 +24,12 @@
 #include <SplashOutputDev.h>
 #include <GlobalParams.h>
 #include <splash/SplashBitmap.h>
+#include <goo/gfile.h>
 
 #define LOG_TAG "PDFDocument"
 #include <android/log.h>
 #define LOGV(fmt, ...) __android_log_print(ANDROID_LOG_VERBOSE, LOG_TAG, fmt, __VA_ARGS__)
+#define LOGE(fmt, ...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, fmt, __VA_ARGS__)
 
 #include <GLES/gl.h>
 
@@ -37,7 +40,7 @@ struct fields_t {
 	jfieldID hDPI;
 	jfieldID vDPI;
 	jfieldID rotate;
-	jfieldID fd;
+//	jfieldID fd;
 };
 static fields_t fields;
 
@@ -285,27 +288,35 @@ static void drawPageSlice(JNIEnv *env, jobject clazz, jint page, jint sliceX,
  * Method:    init_native
  * Signature: (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)I
  */
-static jint native_init(JNIEnv *env, jobject clazz, jobject descriptor,
+static jint native_init(JNIEnv *env, jobject clazz, jstring filePath,
 		jstring ownerPassword, jstring userPassword) {
-	int fd = env->GetIntField(descriptor, fields.fd);
-	FILE *file = fdopen(fd, "r");
+	const char* pFileName = env->GetStringUTFChars(filePath, NULL);
+	if (!pFileName)
+		return 0;
+
+	GooString name(pFileName);
+	GooFile *file = GooFile::open(&name);
 	if (!file) {
-		//LOGV("Open fd failed: %d", fd);
+		LOGE("Open %s failed. errno:%d", pFileName, errno);
+		return 0;
 	}
 
 	Object obj;
 	obj.initNull();
 	FileStream *stream = new FileStream(file, 0, gFalse, 0, &obj);
 	if (!stream) {
-		//LOGV("Create stream failed: %d", fd);
+		LOGE("Create stream failed: %s", pFileName);
 	}
+
 
 	NativePDF *nativePDF = new NativePDF();
 
 	nativePDF->doc = new PDFDoc(stream);
 	if (!nativePDF->doc->isOk()) {
-		//LOGV("Open failed: %d", doc->getErrorCode());
+		LOGE("Open failed: %d", nativePDF->doc->getErrorCode());
 	}
+
+	env->ReleaseStringUTFChars(filePath, pFileName);
 
 	SplashColor sc;
 	sc[0] = 255;
@@ -313,7 +324,7 @@ static jint native_init(JNIEnv *env, jobject clazz, jobject descriptor,
 	sc[2] = 255;
 
 	nativePDF->out = new SplashOutputDev(splashModeRGB8, 1, gFalse, sc);
-	nativePDF->out->startDoc(nativePDF->doc->getXRef());
+	nativePDF->out->startDoc(nativePDF->doc);
 
 	return (jint) nativePDF;
 }
@@ -344,8 +355,8 @@ static void native_class_init(JNIEnv* env, jclass clazz) {
 	fields.vDPI = env->GetFieldID(clazz, "mV_DPI", "D");
 	fields.rotate = env->GetFieldID(clazz, "mRotate", "I");
 
-	jclass fd = env->FindClass("java/io/FileDescriptor");
-	fields.fd = env->GetFieldID(fd, "descriptor", "I");
+//	jclass fd = env->FindClass("java/io/FileDescriptor");
+//	fields.fd = env->GetFieldID(fd, "descriptor", "I");
 
 	globalParams = new GlobalParams();
 
@@ -355,7 +366,7 @@ static void native_class_init(JNIEnv* env, jclass clazz) {
 
 static JNINativeMethod gMethods[] = {
 		{"native_class_init", "()V", (void*) native_class_init},
-		{"native_init", "(Ljava/io/FileDescriptor;Ljava/lang/String;Ljava/lang/String;)I", (void*) native_init},
+		{"native_init", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)I", (void*) native_init},
 		{"native_close", "()V", (void*) native_close},
 		{"getPageMediaWidth", "(I)D", (void*) getPageMediaWidth},
 		{"getPageMediaHeight", "(I)D", (void*) getPageMediaHeight},

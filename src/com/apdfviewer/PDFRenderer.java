@@ -1,5 +1,6 @@
 package com.apdfviewer;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -35,7 +36,7 @@ class PDFRenderer implements GLSurfaceView.Renderer {
 	/**
 	 * file descriptor of the PDF document.
 	 */
-	private AssetFileDescriptor m_descriptor = null;
+//	private AssetFileDescriptor m_descriptor = null;
 	
 
 	/**
@@ -61,22 +62,22 @@ class PDFRenderer implements GLSurfaceView.Renderer {
 	FloatBuffer vex_buf;
 	FloatBuffer tex_buf;
 	
-    protected int loadTexture(GL10 gl) {
-        gl.glEnable(GL10.GL_TEXTURE_2D);
-        
-        Bitmap bmp = BitmapFactory.decodeResource(m_context.getResources(), R.drawable.ic_launcher);
-
-        int[] tex = new int[1];
-
-        gl.glGenTextures(1, tex, 0);
-
-        gl.glBindTexture(GL10.GL_TEXTURE_2D, tex[0]);
-        GLUtils.texImage2D(GL10.GL_TEXTURE_2D, 0, bmp, 0);
-        gl.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MIN_FILTER, GL10.GL_LINEAR);
-        gl.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MAG_FILTER, GL10.GL_LINEAR);
-
-        return tex[0];
-    }
+//    protected int loadTexture(GL10 gl) {
+//        gl.glEnable(GL10.GL_TEXTURE_2D);
+//        
+//        Bitmap bmp = BitmapFactory.decodeResource(m_context.getResources(), R.drawable.ic_launcher);
+//
+//        int[] tex = new int[1];
+//
+//        gl.glGenTextures(1, tex, 0);
+//
+//        gl.glBindTexture(GL10.GL_TEXTURE_2D, tex[0]);
+//        GLUtils.texImage2D(GL10.GL_TEXTURE_2D, 0, bmp, 0);
+//        gl.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MIN_FILTER, GL10.GL_LINEAR);
+//        gl.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MAG_FILTER, GL10.GL_LINEAR);
+//
+//        return tex[0];
+//    }
 
 	public PDFRenderer(Context context) {
 		m_context = context;
@@ -85,22 +86,18 @@ class PDFRenderer implements GLSurfaceView.Renderer {
 	}
 
 	public void onDrawFrame(GL10 gl) {       
+	    Log.v(TAG, "onDrawFrame");
+	    
+        
+        gl.glClear(GL10.GL_COLOR_BUFFER_BIT | GL10.GL_DEPTH_BUFFER_BIT);
+        
+        gl.glMatrixMode(GL10.GL_MODELVIEW);
+        gl.glLoadIdentity();
+
         // texture
-        if (m_texture == -1) {
-        	m_doc.setXdpi(72.0F);
-        	m_doc.setYdpi(72.0F);
-
-        	m_doc.drawPage(null, 10);
-        	//m_texture = loadTexture(gl);
-        	m_texture = m_doc.loadTexture();
-        	Log.v(TAG, "load texture: " + m_texture);
-        }
-
         gl.glBindTexture(GL10.GL_TEXTURE_2D, m_texture);
         gl.glEnable(GL10.GL_TEXTURE_2D);
 
-		gl.glMatrixMode(GL10.GL_MODELVIEW);
-		gl.glLoadIdentity();
 
         gl.glEnableClientState(GL10.GL_VERTEX_ARRAY);
         gl.glEnableClientState(GL10.GL_TEXTURE_COORD_ARRAY);
@@ -118,7 +115,10 @@ class PDFRenderer implements GLSurfaceView.Renderer {
 	}
 
 	public void onSurfaceChanged(GL10 gl, int width, int height) {
-		gl.glViewport(0, 0, width, height);
+       
+        Log.v(TAG, "onSurfaceChanged:w:" + width+"Xh:"+height);
+        Log.v(TAG, "size:w:" + m_doc.getImageWidth() + "Xh:" + m_doc.getImageHeight());
+		gl.glViewport(0, 0, m_doc.getImageWidth(), m_doc.getImageHeight());
 		float ratio = (float) width / height;
         //gl.glMatrixMode(GL10.GL_PROJECTION);
         //gl.glLoadIdentity();
@@ -126,29 +126,28 @@ class PDFRenderer implements GLSurfaceView.Renderer {
 	}
 
 	public void onSurfaceCreated(GL10 gl, EGLConfig config) {
-		gl.glDisable(GL10.GL_DITHER);
+	    gl.glClear(GL10.GL_COLOR_BUFFER_BIT | GL10.GL_DEPTH_BUFFER_BIT);
+        gl.glDisable(GL10.GL_DITHER);
 
-		gl.glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+        gl.glShadeModel(GL10.GL_SMOOTH);
+        gl.glDisable(GL10.GL_DEPTH_TEST);
+        
+//        if (m_texture == -1) {
+//          m_doc.setXdpi(72.0F);
+//          m_doc.setYdpi(72.0F);
 
-		gl.glShadeModel(GL10.GL_SMOOTH);
-		gl.glDisable(GL10.GL_DEPTH_TEST);
+            m_doc.drawPage(null, m_current_page);
+            //m_texture = loadTexture(gl);
+            m_texture = m_doc.loadTexture();
+            Log.v(TAG, "load texture: " + m_texture);
+//        }
+        
+
 	}
 
 	public void openUri(Uri uri) {
-		// open uri
-		try {
-			m_descriptor = m_context.getContentResolver()
-					.openAssetFileDescriptor(uri, "r");
-			if (m_descriptor == null) {
-				Log.e(TAG, "File desciptor is null.");
-			}
-		} catch (FileNotFoundException e) {
-			Log.e(TAG, "Open file failed.");
-			return;
-		}
-
 		// open document
-		m_doc = new PDFDocument(m_descriptor.getFileDescriptor(), "", "");
+		m_doc = new PDFDocument(uri.getPath(), "", "");
 		if (!m_doc.isOk()) {
 			// TODO: report error.
 			return;

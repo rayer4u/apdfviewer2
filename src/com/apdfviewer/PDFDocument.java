@@ -30,16 +30,16 @@ public class PDFDocument {
 	
 	private boolean mUseMediaBox = false;
 	private boolean mCrop = false;
-	private double mH_DPI = 72.0;
-	private double mV_DPI = 72.0;
+	private double mH_DPI = 320.0;
+	private double mV_DPI = 320.0;
 	private int mRotate = 0;
 	
 	//public PDFDocument(String fileName, String ownerPassword, String userPassword) {
 	//	mNativePDF = native_init(fileName, ownerPassword, userPassword);
 	//}
 	
-	public PDFDocument(FileDescriptor fd, String ownerPassword, String userPassword) {
-		mNativePDF = native_init(fd, ownerPassword, userPassword);
+	public PDFDocument(String filePath, String ownerPassword, String userPassword) {
+		mNativePDF = native_init(filePath, ownerPassword, userPassword);
 	}
 
 	public boolean ismUseMediaBox() {
@@ -122,13 +122,21 @@ public class PDFDocument {
 		return native_loadTexture();
 	}
 	
+	public int getImageWidth() {
+	    return native_getImageWidth();
+	}
+	
+	public int getImageHeight() {
+	    return native_getImageHeight();
+	}
+	
 	private native int native_loadTexture();
 	private native void native_draw_page(int page);
 	private native void native_draw_page_slice(int page, int sliceX, int sliceY, int sliceW, int sliceH);
 	private native int native_getImageWidth();
 	private native int native_getImageHeight();
 	
-	private native int native_init(FileDescriptor fd, String ownerPassword, String userPassword);
+	private native int native_init(String filePath, String ownerPassword, String userPassword);
 	private native void native_close();
     
 	private static native void native_class_init();

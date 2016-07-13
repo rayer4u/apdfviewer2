@@ -1,4 +1,4 @@
-#include <clocale>
+#include <locale.h>
 
 static struct lconv default_lconv = {"."};
 
